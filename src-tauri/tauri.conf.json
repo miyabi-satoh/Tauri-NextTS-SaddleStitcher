@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "中綴じ製本くん",
+    "productName": "SaddleStitcher",
     "version": "0.0.1"
   },
   "tauri": {
@@ -91,7 +91,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "中綴じ製本くん",
+        "title": "SaddleStitcher",
         "width": 800
       }
     ]
