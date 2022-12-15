@@ -1,11 +1,12 @@
 {
   "name": "saddle-stitcher",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "dev": "next dev -p 1420",
     "build": "next build && next export -o dist",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "clean": "rimraf dist src-tauri/target"
   },
   "dependencies": {
     "@tauri-apps/api": "latest",
@@ -18,6 +19,10 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "rimraf": "latest",
+    "tailwindcss": "latest",
     "typescript": "latest"
   }
 }
