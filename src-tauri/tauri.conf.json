@@ -7,15 +7,44 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "Tauri-NextTS-SaddleStitcher",
-    "version": "0.0.0"
+    "productName": "中綴じ製本くん",
+    "version": "0.0.1"
   },
   "tauri": {
     "allowlist": {
-      "all": false,
+      "all": true,
+      "dialog": {
+        "open": true,
+        "save": true
+      },
+      "fs": {
+        "exists": true,
+        "scope": ["$RESOURCE/**"]
+      },
+      "path": {
+        "all": true
+      },
+      "process": {
+        "relaunch": true
+      },
+      "os": {
+        "all": true
+      },
       "shell": {
-        "all": false,
-        "open": true
+        "open": true,
+        "execute": true,
+        "scope": [
+          {
+            "name": "sh",
+            "cmd": "sh",
+            "args": ["-c", { "validator": "\\S+" }]
+          },
+          {
+            "name": "cmd",
+            "cmd": "cmd",
+            "args": ["/C", { "validator": "\\S+" }]
+          }
+        ]
       }
     },
     "bundle": {
@@ -33,7 +62,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.amiiby.saddlestitcher",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -42,7 +71,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": ["*.py", "*.sh", "*.bat"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
@@ -62,7 +91,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "Tauri-NextTS-SaddleStitcher",
+        "title": "中綴じ製本くん",
         "width": 800
       }
     ]
