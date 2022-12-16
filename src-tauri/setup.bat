@@ -11,9 +11,8 @@ if not exist ".venv" (
 echo ".venv OK"
 
 call .venv\Scripts\activate.bat
-which python3 | findstr .venv > nul
+where python3 | findstr .venv > nul
 if %errorlevel% neq 0 (
-if [ $? -ne 0 ]; then
     echo ".venvが無効です。"
     exit 1
 )
