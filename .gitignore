@@ -1,0 +1,6 @@
+.DS_Store
+.next
+.venv
+dist
+node_modules
+src-tauri
