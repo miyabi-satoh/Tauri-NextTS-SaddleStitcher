@@ -14,7 +14,7 @@ call .venv\Scripts\activate.bat
 where python3 | findstr .venv > nul
 if %errorlevel% neq 0 (
     echo ".venvが無効です。"
-    exit 1
+    exit /b 1
 )
 python3 -V
 
@@ -26,7 +26,7 @@ if %errorlevel% neq 0 (
 python3 -m pip list | findstr PyPDF2 > nul
 if %errorlevel% neq 0 (
     echo "PyPDF2パッケージが見つかりません。"
-    exit 1
+    exit /b 1
 )
 echo "PyPDF2 OK"
 
