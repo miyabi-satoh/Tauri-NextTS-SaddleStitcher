@@ -16,7 +16,7 @@ export const MessageProvider = (props: React.PropsWithChildren) => {
   const [messages, setMessages] = useState<string[]>([]);
 
   const addMessage = (msg: string) => {
-    setMessages((current) => [...current, msg].slice(-100));
+    setMessages((current) => [...current, ...msg.split("\n")].slice(-100));
   };
 
   const value = {
@@ -48,8 +48,8 @@ export const Console = () => {
   }, [messages]);
 
   return (
-    <div className="h-1/3 border-t border-gray-500 flex flex-col text-xs font-extralight">
-      <div className="px-4 py-2">動作ログ</div>
+    <div className="h-1/3 border-t border-gray-500 flex flex-col text-xs">
+      <div className="px-4 py-2 font-bold">動作ログ</div>
       <div className="px-4 overflow-y-scroll flex-auto">
         {messages.map((line, index) => (
           <pre key={`console-${index}`} className="whitespace-pre-wrap">

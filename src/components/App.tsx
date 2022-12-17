@@ -1,18 +1,13 @@
 import { useEffect, useState } from "react";
-import { basename, dirname, join, resourceDir } from "@tauri-apps/api/path";
-import { open, save, confirm } from "@tauri-apps/api/dialog";
+import { basename } from "@tauri-apps/api/path";
+import { open, save } from "@tauri-apps/api/dialog";
 import { getName, getTauriVersion, getVersion } from "@tauri-apps/api/app";
 import { arch, platform, type, version } from "@tauri-apps/api/os";
-import { Command } from "@tauri-apps/api/shell";
 import { relaunch } from "@tauri-apps/api/process";
-import { exists } from "@tauri-apps/api/fs";
 import { useMessageContext } from "./Console";
+import { invoke } from "@tauri-apps/api";
 
-const windows = navigator.userAgent.includes("Windows");
-const cmd = windows ? "cmd" : "sh";
-const args = windows ? ["/C"] : ["-c"];
-const script_ext = windows ? "bat" : "sh";
-const start = windows ? "start" : "open";
+const DELAY = 10;
 
 export const App = () => {
   const { setMessages, addMessage } = useMessageContext();
@@ -43,10 +38,8 @@ export const App = () => {
   };
 
   async function doSaddleStitch() {
-    const dir = await dirname(inputPdf);
     const name = await basename(inputPdf);
     const newName = `(製本版)${name}`;
-    const path = await join(dir, newName);
     const filePath = await save({
       defaultPath: newName,
     });
@@ -54,26 +47,27 @@ export const App = () => {
     if (filePath === null) {
       return;
     }
-
-    addMessage(`入力=${inputPdf}`);
-    addMessage(`出力=${filePath}`);
     setShowSpinner(true);
-    const resourceDirPath = await resourceDir();
-    const script = await join(resourceDirPath, `saddlestitch.${script_ext}`);
-    const output = await new Command(cmd, [
-      ...args,
-      `"${script}" "${inputPdf}" "${filePath}"`,
-    ]).execute();
-    setShowSpinner(false);
-    addMessage(output.stdout);
-    if (output.code !== 0) {
-      addMessage("");
-      addMessage("エラーが発生しました。");
-      addMessage(output.stderr);
-    } else {
-      addMessage("正常に終了しました。");
-      setSavedFile(filePath);
-    }
+
+    setTimeout(async () => {
+      addMessage(`入力=${inputPdf}`);
+      addMessage(`出力=${filePath}`);
+
+      try {
+        const output: string = await invoke("execute_saddlestitch", {
+          inp: inputPdf,
+          out: filePath,
+        });
+        addMessage(output);
+        addMessage("正常に終了しました。");
+        setSavedFile(filePath);
+      } catch (err) {
+        addMessage("");
+        addMessage("エラーが発生しました。");
+        addMessage(err as string);
+      }
+      setShowSpinner(false);
+    }, DELAY);
   }
 
   async function handleRelaunch() {
@@ -81,7 +75,16 @@ export const App = () => {
   }
 
   async function openFile() {
-    await new Command(cmd, [...args, `${start} "${savedFile}"`]).execute();
+    try {
+      const output: string = await invoke("execute_open", {
+        file: savedFile,
+      });
+      addMessage(output);
+    } catch (err) {
+      addMessage("");
+      addMessage("エラーが発生しました。");
+      addMessage(err as string);
+    }
   }
 
   const Ready = () => {
@@ -92,7 +95,7 @@ export const App = () => {
         </div>
       );
     }
-    if (isReady === 0 || !showSpinner) {
+    if (isReady === true || !showSpinner) {
       return null;
     }
     return (
@@ -117,6 +120,7 @@ export const App = () => {
     let ignore = false;
 
     const f = async () => {
+      setIsReady(undefined);
       setInputPdf("");
       setSavedFile("");
 
@@ -127,21 +131,23 @@ export const App = () => {
       const platformName = await platform();
       const osType = await type();
       const osVersion = await version();
-      const resourceDirPath = await resourceDir();
 
       setMessages([]);
       addMessage(`${appName} v${appVersion} (Using Tauri v${tauriVersion})`);
       addMessage(
         `Running on ${osType}(${platformName}/${osVersion}) ${archName}`
       );
-      addMessage(`ResourceDir=${resourceDirPath}`);
 
-      const script = await join(resourceDirPath, `setup.${script_ext}`);
-      // addMessage(setup);
-      const output = await new Command(cmd, [...args, `"${script}"`]).execute();
-      addMessage(output.stdout);
-      // addMessage(`setup exit ${output.code}`);
-      setIsReady(output.code);
+      setTimeout(async () => {
+        try {
+          const output: string = await invoke("execute_setup");
+          addMessage(output);
+          setIsReady(true);
+        } catch (err) {
+          addMessage(err as string);
+          setIsReady(false);
+        }
+      }, DELAY);
     };
 
     if (!ignore) {
