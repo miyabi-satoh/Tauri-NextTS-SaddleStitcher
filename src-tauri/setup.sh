@@ -2,34 +2,46 @@
 cd `dirname $0`
 
 if [ ! -e .venv ]; then
+    echo "Python仮想環境を作成します"
     python3 -m venv .venv
 fi
-
-if [ ! -e .venv ]; then
-    echo ".venvが見つかりません。"
-    exit 1
-fi
-echo ".venv OK"
-
 source .venv/bin/activate
-which python3 | grep -q .venv
 if [ $? -ne 0 ]; then
-    echo ".venvが無効です。"
+    echo "venvの有効化に失敗しました"
     exit 1
 fi
-echo `python3 -V`
 
 python3 -m pip install --upgrade pip > /dev/null
-python3 -m pip list | grep -q PyPDF2
+python3 -m pip list > pip.list
+
+grep -q wheel pip.list
 if [ $? -ne 0 ]; then
-    python3 -m pip install PyPDF2
+    echo "wheelパッケージをインストールします"
+    python3 -m pip install wheel > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "wheelパッケージのインストールに失敗しました"
+        exit 1
+    fi
 fi
 
-python3 -m pip list | grep -q PyPDF2
+grep -q PyPDF2 pip.list
 if [ $? -ne 0 ]; then
-    echo "PyPDF2パッケージが見つかりません。"
-    exit 1
+    echo "PyPDF2パッケージをインストールします"
+    python3 -m pip install PyPDF2 > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "PyPDF2パッケージのインストールに失敗しました"
+        exit 1
+    fi
 fi
-echo "PyPDF2 OK"
+
+grep -q pycryptodome pip.list
+if [ $? -ne 0 ]; then
+    echo "pycryptodomeパッケージをインストールします" 
+    python3 -m pip install pycryptodome > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "pycryptodomeパッケージのインストールに失敗しました"
+        exit 1
+    fi
+fi
 
 exit 0
