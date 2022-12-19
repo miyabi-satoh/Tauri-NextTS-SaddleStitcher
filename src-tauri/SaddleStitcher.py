@@ -2,7 +2,7 @@ import argparse
 import PyPDF2
 
 
-def new_page_index(pages):
+def new_page_index(pages, dir):
     page_index = []
     last_page = ((pages + 3) // 4 * 4) - 1
 
@@ -16,7 +16,7 @@ def new_page_index(pages):
 
     # print(page_index)
 
-    i = 2
+    i = 0 if dir == 'right' else 2
     while i < last_page:
         tmp = page_index[i]
         page_index[i] = page_index[i + 1]
@@ -28,11 +28,11 @@ def new_page_index(pages):
     return page_index
 
 
-def rearrange_pdf(src, dst):
+def rearrange_pdf(src, dst, dir):
     pdf_src = PyPDF2.PdfFileReader(src, strict=False)
     num_pages = pdf_src.getNumPages()
     # print(num_pages)
-    page_index = new_page_index(num_pages)
+    page_index = new_page_index(num_pages, dir)
 
     pdf_tmp = PyPDF2.PdfFileWriter()
     for i in range(0, len(page_index)):
@@ -77,6 +77,7 @@ if __name__ == '__main__':
     # 引数を受け取る
     parser.add_argument('inp')
     parser.add_argument('out')
+    parser.add_argument('dir')
 
     # 引数を解析
     args = parser.parse_args()
@@ -85,4 +86,4 @@ if __name__ == '__main__':
     # print('inp =', args.inp)
     # print('out =', args.out)
 
-    rearrange_pdf(args.inp, args.out)
+    rearrange_pdf(args.inp, args.out, args.dir)

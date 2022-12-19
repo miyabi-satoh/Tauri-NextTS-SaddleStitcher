@@ -1,20 +1,27 @@
-import { useEffect, useState } from "react";
-import { basename } from "@tauri-apps/api/path";
+import { useEffect, useRef, useState } from "react";
+import { basename, resolveResource } from "@tauri-apps/api/path";
 import { open, save } from "@tauri-apps/api/dialog";
-import { getName, getTauriVersion, getVersion } from "@tauri-apps/api/app";
-import { arch, platform, type, version } from "@tauri-apps/api/os";
 import { relaunch } from "@tauri-apps/api/process";
+import { Command } from "@tauri-apps/api/shell";
 import { useMessageContext } from "./Console";
-import { invoke } from "@tauri-apps/api";
+import { getVersionString } from "~/utils";
+import { Overlay, OverlayShowType } from "./Overlay";
 
-const DELAY = 10;
+const WINDOWS = navigator.userAgent.includes("Windows");
+const CMD = WINDOWS ? "cmd" : "sh";
+const ARG = WINDOWS ? "/C" : "-c";
+const SCRIPT_EXT = WINDOWS ? "bat" : "sh";
+const START = WINDOWS ? "start" : "open";
+
+type OpenDirection = "left" | "right";
 
 export const App = () => {
-  const { setMessages, addMessage } = useMessageContext();
-  const [inputPdf, setInputPdf] = useState<string>("");
-  const [isReady, setIsReady] = useState(undefined);
-  const [showSpinner, setShowSpinner] = useState(false);
+  const didEffect = useRef(false);
+  const { addMessage } = useMessageContext();
+  const [inputPdf, setInputPdf] = useState("");
   const [savedFile, setSavedFile] = useState("");
+  const [openDirection, setOpenDirection] = useState<OpenDirection>("left");
+  const [overlayShows, setOverlayShows] = useState<OverlayShowType>("spinner");
 
   async function selectInputPdf() {
     const selected = await open({
@@ -37,37 +44,46 @@ export const App = () => {
     setInputPdf(event.target.value);
   };
 
+  const handleChangeOpenDirection: React.ChangeEventHandler<
+    HTMLInputElement
+  > = (event) => {
+    setOpenDirection(event.target.value as OpenDirection);
+  };
+
   async function doSaddleStitch() {
     const name = await basename(inputPdf);
     const newName = `(製本版)${name}`;
-    const filePath = await save({
+
+    const savePath = await save({
       defaultPath: newName,
     });
-
-    if (filePath === null) {
+    if (savePath === null) {
       return;
     }
-    setShowSpinner(true);
 
-    setTimeout(async () => {
-      addMessage(`入力=${inputPdf}`);
-      addMessage(`出力=${filePath}`);
+    setOverlayShows("spinner");
 
-      try {
-        const output: string = await invoke("execute_saddlestitch", {
-          inp: inputPdf,
-          out: filePath,
-        });
-        addMessage(output);
-        addMessage("正常に終了しました。");
-        setSavedFile(filePath);
-      } catch (err) {
+    const scriptPath = await resolveResource(`saddlestitch.${SCRIPT_EXT}`);
+    addMessage(`"${scriptPath}" "${inputPdf}" "${savePath}" ${openDirection}`);
+    const command = new Command(CMD, [
+      ARG,
+      `"${scriptPath}" "${inputPdf}" "${savePath}" ${openDirection}`,
+    ]).on("close", (data) => {
+      setOverlayShows("none");
+      if (data.code === 0) {
+        addMessage(`${savePath} に保存しました`);
         addMessage("");
-        addMessage("エラーが発生しました。");
-        addMessage(err as string);
+        addMessage("Ready");
+        setSavedFile(savePath);
+      } else {
+        addMessage(`処理はコード${data.code}で失敗しました`, "text-red-600");
       }
-      setShowSpinner(false);
-    }, DELAY);
+    });
+    command.stdout.on("data", (line) => addMessage(line));
+    command.stderr.on("data", (line) => addMessage(line, "text-red-600"));
+
+    addMessage("処理を開始します");
+    command.spawn();
   }
 
   async function handleRelaunch() {
@@ -75,31 +91,57 @@ export const App = () => {
   }
 
   async function openFile() {
-    try {
-      const output: string = await invoke("execute_open", {
-        file: savedFile,
-      });
-      addMessage(output);
-    } catch (err) {
-      addMessage("");
-      addMessage("エラーが発生しました。");
-      addMessage(err as string);
-    }
+    const command = new Command(CMD, [ARG, `${START} "${savedFile}"`]).on(
+      "close",
+      (data) => {
+        if (data.code !== 0) {
+          addMessage(`処理はコード${data.code}で失敗しました`, "text-red-600");
+        }
+      }
+    );
+    command.stdout.on("data", (line) => addMessage(line));
+    command.stderr.on("data", (line) => addMessage(line, "text-red-600"));
+
+    command.spawn();
   }
 
-  const Ready = () => {
-    if (isReady === undefined || showSpinner) {
-      return (
-        <div className="overlay">
-          <div className="spinner" />
-        </div>
+  useEffect(() => {
+    const f = async () => {
+      setOverlayShows("spinner");
+      addMessage(await getVersionString());
+
+      const scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
+      const command = new Command(CMD, [ARG, `"${scriptPath}"`]).on(
+        "close",
+        (data) => {
+          if (data.code === 0) {
+            addMessage("Ready");
+            setOverlayShows("none");
+          } else {
+            addMessage("Oops!", "text-red-600");
+            addMessage(`setup failed with code ${data.code}`, "text-red-600");
+            setOverlayShows("children");
+          }
+        }
       );
+      command.stdout.on("data", (line) => addMessage(line));
+      command.stderr.on("data", (line) => addMessage(line, "text-red-600"));
+
+      command.spawn();
+    };
+
+    if (!didEffect.current) {
+      f();
     }
-    if (isReady === true || !showSpinner) {
-      return null;
-    }
-    return (
-      <div className="overlay flex-col">
+
+    return () => {
+      didEffect.current = true;
+    };
+  }, []);
+
+  return (
+    <>
+      <Overlay show={overlayShows}>
         <div className="text-3xl mb-4 text-red-600">
           動作に必要な環境を準備できませんでした。
         </div>
@@ -112,58 +154,9 @@ export const App = () => {
             アプリケーションを再起動
           </button>
         </div>
-      </div>
-    );
-  };
-
-  useEffect(() => {
-    let ignore = false;
-
-    const f = async () => {
-      setIsReady(undefined);
-      setInputPdf("");
-      setSavedFile("");
-
-      const appName = await getName();
-      const appVersion = await getVersion();
-      const tauriVersion = await getTauriVersion();
-      const archName = await arch();
-      const platformName = await platform();
-      const osType = await type();
-      const osVersion = await version();
-
-      setMessages([]);
-      addMessage(`${appName} v${appVersion} (Using Tauri v${tauriVersion})`);
-      addMessage(
-        `Running on ${osType}(${platformName}/${osVersion}) ${archName}`
-      );
-
-      setTimeout(async () => {
-        try {
-          const output: string = await invoke("execute_setup");
-          addMessage(output);
-          setIsReady(true);
-        } catch (err) {
-          addMessage(err as string);
-          setIsReady(false);
-        }
-      }, DELAY);
-    };
-
-    if (!ignore) {
-      f();
-    }
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  return (
-    <>
-      <Ready />
+      </Overlay>
       <div className="py-2 px-4">
-        <div className="py-2">
+        <div className="py-2 flex flex-col">
           <label htmlFor="input-pdf" className="form-label">
             変換するPDFファイル
           </label>
@@ -174,13 +167,41 @@ export const App = () => {
             value={inputPdf}
             onChange={handleChangeInputPdf}
           />
-          <button
-            className="btn-primary mt-2"
-            type="button"
-            onClick={selectInputPdf}
-          >
-            選択
-          </button>
+          <div className="mt-2 flex items-center">
+            <button
+              className="btn-primary mr-8"
+              type="button"
+              onClick={selectInputPdf}
+            >
+              選択
+            </button>
+
+            <input
+              className="form-check-input"
+              type="radio"
+              value="left"
+              name="direction"
+              id="openLeft"
+              onChange={handleChangeOpenDirection}
+              checked={"left" == openDirection}
+            />
+            <label className="form-check-label" htmlFor="openLeft">
+              左開き
+            </label>
+
+            <input
+              className="form-check-input ml-4"
+              type="radio"
+              value="right"
+              name="direction"
+              id="openRight"
+              onChange={handleChangeOpenDirection}
+              checked={"right" == openDirection}
+            />
+            <label className="form-check-label" htmlFor="openRight">
+              右開き
+            </label>
+          </div>
         </div>
 
         <div className="py-8 flex flex-col">

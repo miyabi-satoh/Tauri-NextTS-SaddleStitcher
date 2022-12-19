@@ -32,6 +32,16 @@
       border rounded outline-none transition duration-100 px-3 py-2;
   }
 
+  input[type="radio"][class~="form-check-input"] {
+    @apply w-6 h-6 text-blue-600 bg-gray-100 dark:bg-gray-700
+      border-gray-300 dark:border-gray-600
+      focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2;
+  }
+
+  label[class~="form-check-label"] {
+    @apply text-sm font-medium text-gray-900 dark:text-gray-300;
+  }
+
   .overlay {
     @apply absolute text-gray-900 bg-white bg-opacity-60 z-10 h-4/6 w-full flex items-center justify-center;
   }
