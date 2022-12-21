@@ -18,8 +18,18 @@
         "save": true
       },
       "fs": {
+        "createDir": true,
         "exists": true,
-        "scope": ["$RESOURCE/**", "$APPDATA/**"]
+        "readDir": true,
+        "readFile": true,
+        "writeFile": true,
+        "scope": [
+          "$RESOURCE/**",
+          "$APPDATA",
+          "$APPDATA/**",
+          "$APPCONFIG",
+          "$APPCONFIG/**"
+        ]
       },
       "path": {
         "all": true
