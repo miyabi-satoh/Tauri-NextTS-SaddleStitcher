@@ -127,7 +127,8 @@ export const App = () => {
 
   function doSetup() {
     return new Promise(async function (resolve, reject) {
-      let pyInfo = [];
+      let pythonPath = "";
+      let pythonVer = 0.0;
       for (let py of ["python", "python3"]) {
         // Pythonのパスを取得する
         const output = await shellExecute(`${WHERE} ${py}`);
@@ -141,14 +142,18 @@ export const App = () => {
               const matches = output.stdout.match(/(\d+(\.\d+)?)/);
               if (matches) {
                 addMessage(JSON.stringify(matches));
-                pyInfo.push([path, matches[0]]);
+                const ver = parseFloat(matches[0]);
+                if (ver > pythonVer) {
+                  pythonVer = ver;
+                  pythonPath = path;
+                }
               }
             }
           }
         }
       }
 
-      addMessage(JSON.stringify(pyInfo));
+      addMessage(`${pythonPath}を使用します`);
       resolve(true);
     });
     //   const contents = await readTextFile("app.conf", {
