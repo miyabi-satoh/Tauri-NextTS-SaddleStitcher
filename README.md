@@ -10,6 +10,10 @@
 - (0.0.3)PDF によっては pycryptodome が必要だった。そして pycryptodome に wheel を入れろと言われた。Some PDFs required pycryptodome. And I was told to put the wheel in pycryptodome.
 - (0.0.3)左開き／右開きを指定できるようにしてみた。（右開きのページ順が合ってるかは未確認なのだが）I tried to be able to specify left opening / right opening. (I'm not sure if the right-opening page order is correct.)
 - Windows のバッチファイルを UTF8 で保存していた…。
+- Windows 標準のインストール先である Program Files だと書き込めないようなので、AppDir を使ってみよう。
+- 設定の読み書きを実装しよう。AppConfig でいいかな。
+- (0.0.4)Windows でうまく動かなかったので、書き込み系を AppDir 等にしてみた。
+- (9.0.4)設定ファイルの read を実装した。write は未実装。正直 Windows でのデバッグ用。
 
 ## Screenshots
 

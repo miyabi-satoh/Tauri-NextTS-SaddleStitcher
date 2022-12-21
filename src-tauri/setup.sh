@@ -1,14 +1,12 @@
 #!/bin/sh
-cd `dirname $0`
 
-if [ ! -e .venv ]; then
-    echo "Python仮想環境を作成します"
-    python3 -m venv .venv
-fi
 source .venv/bin/activate
 if [ $? -ne 0 ]; then
     echo "venvの有効化に失敗しました"
     exit 1
+else
+    python3 -V
+    echo "venv OK"
 fi
 
 python3 -m pip install --upgrade pip > /dev/null
@@ -22,6 +20,9 @@ if [ $? -ne 0 ]; then
         echo "wheelパッケージのインストールに失敗しました"
         exit 1
     fi
+    echo "成功"
+else
+    echo `grep wheel pip.list`
 fi
 
 grep -q PyPDF2 pip.list
@@ -32,6 +33,9 @@ if [ $? -ne 0 ]; then
         echo "PyPDF2パッケージのインストールに失敗しました"
         exit 1
     fi
+    echo "成功"
+else
+    echo `grep PyPDF2 pip.list`
 fi
 
 grep -q pycryptodome pip.list
@@ -42,6 +46,9 @@ if [ $? -ne 0 ]; then
         echo "pycryptodomeパッケージのインストールに失敗しました"
         exit 1
     fi
+    echo "成功"
+else
+    echo `grep pycryptodome pip.list`
 fi
 
 exit 0
