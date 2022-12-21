@@ -19,7 +19,7 @@
       },
       "fs": {
         "exists": true,
-        "scope": ["$RESOURCE/**"]
+        "scope": ["$RESOURCE/**", "$APPDATA/**"]
       },
       "path": {
         "all": true
