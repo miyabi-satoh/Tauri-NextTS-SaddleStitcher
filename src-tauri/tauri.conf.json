@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "SaddleStitcher",
-    "version": "0.0.3"
+    "version": "0.0.4"
   },
   "tauri": {
     "allowlist": {
@@ -18,8 +18,18 @@
         "save": true
       },
       "fs": {
+        "createDir": true,
         "exists": true,
-        "scope": ["$RESOURCE/**"]
+        "readDir": true,
+        "readFile": true,
+        "writeFile": true,
+        "scope": [
+          "$RESOURCE/**",
+          "$APPDATA",
+          "$APPDATA/**",
+          "$APPCONFIG",
+          "$APPCONFIG/**"
+        ]
       },
       "path": {
         "all": true

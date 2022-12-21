@@ -1,4 +1,4 @@
 @echo off
-pushd "%~dp0"
+BASEDIR=%~dp0
 call .venv\Scripts\activate.bat
-python3 SaddleStitcher.py "%1" "%2" %3
+python3 "%BASEDIR%SaddleStitcher.py "%1" "%2" %3

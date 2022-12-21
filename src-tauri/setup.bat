@@ -1,46 +1,53 @@
 @echo off
-pushd "%~dp0"
 
-if not exist ".venv" (
-    echo "Pythonä»®æƒ³ç’°å¢ƒã‚’ä½œæˆã—ã¾ã™"
-    python3 -m venv .venv
-)
 call .venv\Scripts\activate.bat
 if %errorlevel% neq 0 (
-    echo "venvã®æœ‰åŠ¹åŒ–ã«å¤±æ•—ã—ã¾ã—ãŸ"
+    echo "venv‚Ì—LŒø‰»‚É¸”s‚µ‚Ü‚µ‚½"
     exit /b 1
 )
 
-python3 -m pip install --upgrade pip > nul
-python3 -m pip list > pip.list
+python -m pip install --upgrade pip > nul
+python -m pip list > pip.list
 
-find "wheel" pip.list > nul
+findstr "wheel" pip.list > nul
 if %errorlevel% neq 0 (
-    echo "wheelãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¾ã™"
-    python3 -m pip install wheel > nul
+    echo "wheelƒpƒbƒP[ƒW‚ğƒCƒ“ƒXƒg[ƒ‹‚µ‚Ü‚·"
+    python -m pip install wheel > nul
     if %errorlevel% neq 0 (
-        echo "wheelãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã«å¤±æ•—ã—ã¾ã—ãŸ"
+        echo "wheelƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹‚É¸”s‚µ‚Ü‚µ‚½"
         exit /b 1
+    ) else (
+        echo "¬Œ÷"
     )
+) else (
+    findstr "wheel" pip.list
 )
 
-find "PyPDF2" pip.list > nul
+findstr "PyPDF2" pip.list > nul
 if %errorlevel% neq 0 (
-    echo "PyPDF2ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¾ã™"
-    python3 -m pip install PyPDF2 > nul
+    echo "PyPDF2ƒpƒbƒP[ƒW‚ğƒCƒ“ƒXƒg[ƒ‹‚µ‚Ü‚·"
+    python -m pip install PyPDF2 > nul
     if %errorlevel% neq 0 (
-        echo "PyPDF2ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã«å¤±æ•—ã—ã¾ã—ãŸ"
+        echo "PyPDF2ƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹‚É¸”s‚µ‚Ü‚µ‚½"
         exit /b 1
+    ) else (
+        echo "¬Œ÷"
     )
+) else (
+    findstr "PyPDF2" pip.list
 )
 
-find "pycryptodome" pip.list > nul
+findstr "pycryptodome" pip.list > nul
 if %errorlevel% neq 0 (
-    python3 -m pip install pycryptodome > nul
+    python -m pip install pycryptodome > nul
     if %errorlevel% neq 0 (
-        echo "pycryptodomeãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã«å¤±æ•—ã—ã¾ã—ãŸ"
+        echo "pycryptodomeƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹‚É¸”s‚µ‚Ü‚µ‚½"
         exit /b 1
+    ) else (
+        echo "¬Œ÷"
     )
-)
+) else {
+    findstr "pycryptodome" pip.list
+}
 
 exit /b 0
