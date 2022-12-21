@@ -3,11 +3,12 @@ import {
   BaseDirectory,
   createDir,
   exists,
-  readDir,
   readTextFile,
+  removeDir,
   writeTextFile,
 } from "@tauri-apps/api/fs";
 import { appConfigDir } from "@tauri-apps/api/path";
+import { dirExists } from ".";
 
 const CONF_FILENAME = "saddlestitcher.conf.json";
 const CONF_OPTION = { dir: BaseDirectory.AppConfig };
@@ -37,9 +38,7 @@ export async function loadConfig(): Promise<Config> {
 
 export async function writeConfig(config: Config): Promise<void> {
   const configDir = await appConfigDir();
-  try {
-    await readDir(configDir);
-  } catch (e) {
+  if ((await dirExists(configDir)) === false) {
     try {
       await createDir(configDir, { recursive: true });
     } catch (e) {
@@ -51,4 +50,15 @@ export async function writeConfig(config: Config): Promise<void> {
     JSON.stringify(config, null, "\t"),
     CONF_OPTION
   );
+}
+
+export async function removeConfig(): Promise<void> {
+  const configDir = await appConfigDir();
+  if ((await dirExists(configDir)) === true) {
+    try {
+      await removeDir("", { ...CONF_OPTION, recursive: true });
+    } catch (e) {
+      throw e;
+    }
+  }
 }
