@@ -9,6 +9,7 @@
 - (0.0.3)色々試した結果、フロントで実行可能な処理はフロントで済ませてしまう方が良い気がした。一番は外部コマンド出力の拾い方で。バックエンド側で実行した出力を行ごとにフロントへ送るのが難しい。Rust に不慣れなことも一因。As a result of trying various things, I felt that it was better to finish the processing that can be executed on the front on the front. The first is how to pick up the external command output. It's difficult to send the output from the backend line by line to the front. Unfamiliarity with Rust is also a factor.
 - (0.0.3)PDF によっては pycryptodome が必要だった。そして pycryptodome に wheel を入れろと言われた。Some PDFs required pycryptodome. And I was told to put the wheel in pycryptodome.
 - (0.0.3)左開き／右開きを指定できるようにしてみた。（右開きのページ順が合ってるかは未確認なのだが）I tried to be able to specify left opening / right opening. (I'm not sure if the right-opening page order is correct.)
+- Windows のバッチファイルを UTF8 で保存していた…。
 
 ## Screenshots
 

@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { basename, resolveResource } from "@tauri-apps/api/path";
+import {
+  appDataDir,
+  BaseDirectory,
+  basename,
+  resolveResource,
+} from "@tauri-apps/api/path";
 import { open, save } from "@tauri-apps/api/dialog";
 import { relaunch } from "@tauri-apps/api/process";
-import { Command } from "@tauri-apps/api/shell";
+import { ChildProcess, Command, SpawnOptions } from "@tauri-apps/api/shell";
+import { readTextFile } from "@tauri-apps/api/fs";
 import { useMessageContext } from "./Console";
 import { getVersionString } from "~/utils";
 import { Overlay, OverlayShowType } from "./Overlay";
@@ -12,6 +18,7 @@ const CMD = WINDOWS ? "cmd" : "sh";
 const ARG = WINDOWS ? "/C" : "-c";
 const SCRIPT_EXT = WINDOWS ? "bat" : "sh";
 const START = WINDOWS ? "start" : "open";
+const WHERE = WINDOWS ? "where" : "which";
 
 type OpenDirection = "left" | "right";
 
@@ -105,29 +112,85 @@ export const App = () => {
     command.spawn();
   }
 
+  function shellExecute(command: string, options?: SpawnOptions) {
+    addMessage(`> ${command}`);
+    return new Command(CMD, [ARG, command], options).execute();
+  }
+
+  function showOutput(output: ChildProcess) {
+    addMessage(output.stdout);
+    if (output.code !== 0) {
+      addMessage(`setup failed with code ${output.code}`, "text-red-600");
+      addMessage(output.stderr, "text-red-600");
+    }
+  }
+
+  function doSetup() {
+    return new Promise(async function (resolve, reject) {
+      let pyInfo = [];
+      for (let py of ["python", "python3"]) {
+        // Pythonのパスを取得する
+        const output = await shellExecute(`${WHERE} ${py}`);
+        showOutput(output);
+        if (output.code === 0) {
+          for (let path of output.stdout.split("\n")) {
+            // Pythonのバージョンを取得する
+            const output = await shellExecute(`"${path}" -V`);
+            showOutput(output);
+            if (output.code === 0) {
+              const matches = output.stdout.match(/(\d+(\.\d+)?)/);
+              if (matches) {
+                addMessage(JSON.stringify(matches));
+                pyInfo.push([path, matches[0]]);
+              }
+            }
+          }
+        }
+      }
+
+      addMessage(JSON.stringify(pyInfo));
+      resolve(true);
+    });
+    //   const contents = await readTextFile("app.conf", {
+    //     dir: BaseDirectory.AppData,
+    //   });
+    //   // numが3以上ならnumを返し、3未満なら"Falied!"のメッセージを返す
+    //   if (num >= 3) {
+    //     setTimeout(function () {
+    //       resolve(num);
+    //     }, 1000);
+    //   } else {
+    //     reject("Falied!");
+    //   }
+    // });
+  }
+
   useEffect(() => {
     const f = async () => {
       setOverlayShows("spinner");
       addMessage(await getVersionString());
+      doSetup()
+        .then((res) => setOverlayShows("none"))
+        .catch((err) => setOverlayShows("children"));
 
-      const scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
-      const command = new Command(CMD, [ARG, `"${scriptPath}"`]).on(
-        "close",
-        (data) => {
-          if (data.code === 0) {
-            addMessage("Ready");
-            setOverlayShows("none");
-          } else {
-            addMessage("Oops!", "text-red-600");
-            addMessage(`setup failed with code ${data.code}`, "text-red-600");
-            setOverlayShows("children");
-          }
-        }
-      );
-      command.stdout.on("data", (line) => addMessage(line));
-      command.stderr.on("data", (line) => addMessage(line, "text-red-600"));
+      // const scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
+      // const command = new Command(CMD, [ARG, `"${scriptPath}"`]).on(
+      //   "close",
+      //   (data) => {
+      //     if (data.code === 0) {
+      //       addMessage("Ready");
+      //       setOverlayShows("none");
+      //     } else {
+      //       addMessage("Oops!", "text-red-600");
+      //       addMessage(`setup failed with code ${data.code}`, "text-red-600");
+      //       setOverlayShows("children");
+      //     }
+      //   }
+      // );
+      // command.stdout.on("data", (line) => addMessage(line));
+      // command.stderr.on("data", (line) => addMessage(line, "text-red-600"));
 
-      command.spawn();
+      // command.spawn();
     };
 
     if (!didEffect.current) {
