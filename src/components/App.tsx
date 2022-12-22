@@ -120,6 +120,7 @@ export const App = () => {
         debug(e);
         console.log(e);
         addMessage("設定ディレクトリの削除に失敗しました", COLOR_ERR);
+        return;
       }
       const dataDir = await appDataDir();
       if ((await dirExists(dataDir)) === true) {
@@ -129,8 +130,11 @@ export const App = () => {
           debug(e);
           console.log(e);
           addMessage("データディレクトリの削除に失敗しました", COLOR_ERR);
+          return;
         }
       }
+      // 再起動
+      await relaunch();
     }
   }
 
@@ -211,6 +215,7 @@ export const App = () => {
           if (output.code === 0) {
             for (let path of output.stdout.split("\n")) {
               // Pythonのバージョンを取得する
+              path = path.replace("\r", "").replace("\n", "");
               const output = await shellExecute(`"${path}" -V`);
               debug(output);
               if (output.code === 0) {
