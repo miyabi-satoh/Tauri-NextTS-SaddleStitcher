@@ -13,7 +13,7 @@
 - Windows 標準のインストール先である Program Files だと書き込めないようなので、AppDir を使ってみよう。
 - 設定の読み書きを実装しよう。AppConfig でいいかな。
 - (0.0.4)Windows でうまく動かなかったので、書き込み系を AppDir 等にしてみた。
-- (9.0.4)設定ファイルの read を実装した。write は未実装。正直 Windows でのデバッグ用。
+- (0.0.4)設定ファイルの read を実装した。write は未実装。正直 Windows でのデバッグ用。
 
 ## Screenshots
 
