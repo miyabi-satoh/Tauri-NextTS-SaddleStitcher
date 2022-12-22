@@ -16,8 +16,6 @@ import { Overlay, OverlayShowType } from "./Overlay";
 import { Config, loadConfig, removeConfig } from "~/utils/config";
 
 const WINDOWS = navigator.userAgent.includes("Windows");
-const CMD = WINDOWS ? "cmd" : "sh";
-const ARG = WINDOWS ? "/C" : "-c";
 const SCRIPT_EXT = WINDOWS ? "bat" : "sh";
 const START = WINDOWS ? "start" : "open";
 const WHERE = WINDOWS ? "where" : "which";
@@ -80,10 +78,8 @@ export const App = () => {
 
     const dataDir = await appDataDir();
     const scriptPath = await resolveResource(`saddlestitch.${SCRIPT_EXT}`);
-    debug(`> "${scriptPath}" "${inputPdf}" "${savePath}" ${openDirection}`);
-    const command = new Command(
-      CMD,
-      [ARG, `"${scriptPath}" "${inputPdf}" "${savePath}" ${openDirection}`],
+    const command = newCommand(
+      `"${scriptPath}" "${inputPdf}" "${savePath}" ${openDirection}`,
       {
         cwd: dataDir,
       }
@@ -91,7 +87,7 @@ export const App = () => {
       setOverlayShows("none");
       if (data.code === 0) {
         addMessage(`${savePath} に保存しました`);
-        addMessage("\nReady");
+        addMessage("Ready");
         setSavedFile(savePath);
       } else {
         addMessage(`処理はコード${data.code}で失敗しました`, COLOR_ERR);
@@ -120,6 +116,7 @@ export const App = () => {
         debug(e);
         console.log(e);
         addMessage("設定ディレクトリの削除に失敗しました", COLOR_ERR);
+        return;
       }
       const dataDir = await appDataDir();
       if ((await dirExists(dataDir)) === true) {
@@ -129,13 +126,24 @@ export const App = () => {
           debug(e);
           console.log(e);
           addMessage("データディレクトリの削除に失敗しました", COLOR_ERR);
+          return;
         }
       }
+      // 再起動
+      await relaunch();
     }
   }
 
+  function newCommand(command: string, options?: SpawnOptions) {
+    const CMD = WINDOWS ? "cmd" : "sh";
+    const ARG = WINDOWS ? "/C" : "-c";
+
+    debug(`> ${command}`);
+    return new Command(CMD, [ARG, command], options);
+  }
+
   async function openFile() {
-    const command = new Command(CMD, [ARG, `${START} "${savedFile}"`]).on(
+    const command = newCommand(`${START} "${savedFile}"`).on(
       "close",
       (data) => {
         if (data.code !== 0) {
@@ -147,19 +155,6 @@ export const App = () => {
     command.stderr.on("data", (line) => addMessage(line, COLOR_ERR));
 
     command.spawn();
-  }
-
-  function shellExecute(command: string, options?: SpawnOptions) {
-    debug(`> ${command}`);
-    return new Command(CMD, [ARG, command], options).execute();
-  }
-
-  function showOutput(output: ChildProcess) {
-    addMessage(output.stdout);
-    if (output.code !== 0) {
-      addMessage(`setup failed with code ${output.code}`, COLOR_ERR);
-      addMessage(output.stderr, COLOR_ERR);
-    }
   }
 
   function debug(output: string | ChildProcess) {
@@ -206,12 +201,13 @@ export const App = () => {
         let pythonVer = 0.0;
         for (let py of ["python", "python3"]) {
           // Pythonのパスを取得する
-          const output = await shellExecute(`${WHERE} ${py}`);
+          const output = await newCommand(`${WHERE} ${py}`).execute();
           debug(output);
           if (output.code === 0) {
             for (let path of output.stdout.split("\n")) {
               // Pythonのバージョンを取得する
-              const output = await shellExecute(`"${path}" -V`);
+              path = path.replace("\r", "").replace("\n", "");
+              const output = await newCommand(`"${path}" -V`).execute();
               debug(output);
               if (output.code === 0) {
                 const matches = output.stdout.match(/(\d+(\.\d+)?)/);
@@ -229,8 +225,7 @@ export const App = () => {
         }
         // Windowsならpy.exeも試してみる
         if (!pythonPath) {
-          const output = await shellExecute(`"py -3 -V`);
-          debug(output);
+          const output = await newCommand(`"py -3 -V`).execute();
           if (output.code === 0) {
             pythonPath = "py -3";
           }
@@ -243,10 +238,9 @@ export const App = () => {
 
         debug(`${pythonPath}を使用します`);
         // .venvを作成
-        const output = await shellExecute(`"${pythonPath}" -m venv .venv`, {
+        const output = await newCommand(`"${pythonPath}" -m venv .venv`, {
           cwd: dataDir,
-        });
-        debug(output);
+        }).execute();
         if (output.code !== 0) {
           return reject(false);
         }
@@ -254,15 +248,14 @@ export const App = () => {
 
       // パッケージのインストールなどはスクリプトで
       const scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
-      debug(`> ${scriptPath}`);
       let setupCode = undefined;
-      const command = new Command(CMD, [ARG, `"${scriptPath}"`], {
+      const command = newCommand(`"${scriptPath}"`, {
         cwd: dataDir,
       }).on("close", (data) => {
         setupCode = data.code;
         if (data.code === 0) {
           setOverlayShows("none");
-          addMessage("\nReady");
+          addMessage("Ready");
         } else {
           setOverlayShows("children");
           addMessage(`setup failed with code ${data.code}`, COLOR_ERR);
