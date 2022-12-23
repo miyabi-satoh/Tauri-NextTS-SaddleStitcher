@@ -4,6 +4,9 @@ call .venv\Scripts\activate.bat
 if %errorlevel% neq 0 (
     echo "venvの有効化に失敗しました"
     exit /b 1
+) else (
+    python -V
+    echo "venv OK"
 )
 
 python -m pip install --upgrade pip > nul
@@ -39,6 +42,7 @@ if %errorlevel% neq 0 (
 
 findstr "pycryptodome" pip.list > nul
 if %errorlevel% neq 0 (
+    echo "pycryptodomeパッケージをインストールします"
     python -m pip install pycryptodome > nul
     if %errorlevel% neq 0 (
         echo "pycryptodomeパッケージのインストールに失敗しました"
