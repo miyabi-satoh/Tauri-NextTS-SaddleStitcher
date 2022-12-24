@@ -28,7 +28,7 @@ fi
 grep -q PyPDF2 pip.list
 if [ $? -ne 0 ]; then
     echo "PyPDF2パッケージをインストールします"
-    python3 -m pip install PyPDF2 > /dev/null
+    python3 -m pip install 'PyPDF2>=2,<3' > /dev/null
     if [ $? -ne 0 ]; then
         echo "PyPDF2パッケージのインストールに失敗しました"
         exit 1

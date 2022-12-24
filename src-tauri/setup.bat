@@ -29,7 +29,7 @@ if %errorlevel% neq 0 (
 findstr "PyPDF2" pip.list > nul
 if %errorlevel% neq 0 (
     echo "PyPDF2パッケージをインストールします"
-    python -m pip install PyPDF2 > nul
+    python -m pip install 'PyPDF2>=2,<3' > nul
     if %errorlevel% neq 0 (
         echo "PyPDF2パッケージのインストールに失敗しました"
         exit /b 1
