@@ -250,7 +250,11 @@ export const App = () => {
       }
 
       // パッケージのインストールなどはスクリプトで
-      const scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
+      let scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
+      // windowsだと、謎に\\?\が付く
+      if (WINDOWS) {
+        scriptPath = scriptPath.replace("\\\\?\\", "");
+      }
       const command = newCommand(`${scriptPath}`, {
         cwd: dataDir,
       }).on("close", (data) => {
