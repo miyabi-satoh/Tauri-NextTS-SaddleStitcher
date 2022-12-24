@@ -47,12 +47,12 @@
           {
             "name": "sh",
             "cmd": "sh",
-            "args": ["-c", { "validator": "\\S+" }]
+            "args": true
           },
           {
             "name": "cmd",
             "cmd": "cmd",
-            "args": ["/C", { "validator": "\\S+" }]
+            "args": true
           }
         ]
       }
