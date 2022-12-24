@@ -14,13 +14,11 @@ const CONF_FILENAME = "saddlestitcher.conf.json";
 const CONF_OPTION = { dir: BaseDirectory.AppConfig };
 
 export interface Config {
-  version: string;
   debug: boolean;
 }
 
 export async function getConfigDefault(): Promise<Config> {
   return {
-    version: await getVersion(),
     debug: false,
   };
 }
@@ -29,7 +27,7 @@ export async function loadConfig(): Promise<Config> {
   let config = await getConfigDefault();
   if (await exists(CONF_FILENAME, CONF_OPTION)) {
     const contents = await readTextFile(CONF_FILENAME, CONF_OPTION);
-    config = JSON.parse(contents) as Config;
+    config = { ...config, ...JSON.parse(contents) } as Config;
   } else {
     await writeConfig(config);
   }

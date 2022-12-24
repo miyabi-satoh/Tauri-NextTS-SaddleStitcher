@@ -79,7 +79,7 @@ export const App = () => {
     const dataDir = await appDataDir();
     const scriptPath = await resolveResource(`saddlestitch.${SCRIPT_EXT}`);
     const command = newCommand(
-      `"${scriptPath}" "${inputPdf}" "${savePath}" ${openDirection}`,
+      `${scriptPath} "${inputPdf}" "${savePath}" ${openDirection}`,
       {
         cwd: dataDir,
       }
@@ -137,9 +137,10 @@ export const App = () => {
   function newCommand(command: string, options?: SpawnOptions) {
     const CMD = WINDOWS ? "cmd" : "sh";
     const ARG = WINDOWS ? "/C" : "-c";
+    const ENC = WINDOWS ? "shift-jis" : "utf-8";
 
     debug(`> ${command}`);
-    return new Command(CMD, [ARG, command], options);
+    return new Command(CMD, [ARG, command], { encoding: ENC, ...options });
   }
 
   async function openFile() {
@@ -207,7 +208,7 @@ export const App = () => {
             for (let path of output.stdout.split("\n")) {
               // Pythonのバージョンを取得する
               path = path.replace("\r", "").replace("\n", "");
-              const output = await newCommand(`"${path}" -V`).execute();
+              const output = await newCommand(`${path} -V`).execute();
               debug(output);
               if (output.code === 0) {
                 const matches = output.stdout.match(/(\d+(\.\d+)?)/);
@@ -225,7 +226,8 @@ export const App = () => {
         }
         // Windowsならpy.exeも試してみる
         if (!pythonPath) {
-          const output = await newCommand(`"py -3 -V`).execute();
+          const output = await newCommand(`py -3 -V`).execute();
+          debug(output);
           if (output.code === 0) {
             pythonPath = "py -3";
           }
@@ -238,21 +240,24 @@ export const App = () => {
 
         debug(`${pythonPath}を使用します`);
         // .venvを作成
-        const output = await newCommand(`"${pythonPath}" -m venv .venv`, {
+        const output = await newCommand(`${pythonPath} -m venv .venv`, {
           cwd: dataDir,
         }).execute();
+        debug(output);
         if (output.code !== 0) {
           return reject(false);
         }
       }
 
       // パッケージのインストールなどはスクリプトで
-      const scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
-      let setupCode = undefined;
-      const command = newCommand(`"${scriptPath}"`, {
+      let scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
+      // windowsだと、謎に\\?\が付く
+      if (WINDOWS) {
+        scriptPath = scriptPath.replace("\\\\?\\", "");
+      }
+      const command = newCommand(`${scriptPath}`, {
         cwd: dataDir,
       }).on("close", (data) => {
-        setupCode = data.code;
         if (data.code === 0) {
           setOverlayShows("none");
           addMessage("Ready");

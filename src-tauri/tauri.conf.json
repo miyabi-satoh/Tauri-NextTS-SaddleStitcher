@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "SaddleStitcher",
-    "version": "0.0.5"
+    "version": "0.0.6"
   },
   "tauri": {
     "allowlist": {
@@ -47,12 +47,12 @@
           {
             "name": "sh",
             "cmd": "sh",
-            "args": ["-c", { "validator": "\\S+" }]
+            "args": true
           },
           {
             "name": "cmd",
             "cmd": "cmd",
-            "args": ["/C", { "validator": "\\S+" }]
+            "args": true
           }
         ]
       }
