@@ -69,6 +69,7 @@ export const App = () => {
 
     const savePath = await save({
       defaultPath: newName,
+      filters: [{ name: "PDF Document", extensions: ["pdf"] }],
     });
     if (savePath === null) {
       return;
@@ -79,7 +80,7 @@ export const App = () => {
     const dataDir = await appDataDir();
     const scriptPath = await resolveResource(`saddlestitch.${SCRIPT_EXT}`);
     const command = newCommand(
-      `${scriptPath} "${inputPdf}" "${savePath}" ${openDirection}`,
+      [scriptPath, `"${inputPdf}"`, `"${savePath}"`, openDirection],
       {
         cwd: dataDir,
       }
@@ -134,33 +135,39 @@ export const App = () => {
     }
   }
 
-  function newCommand(command: string, options?: SpawnOptions) {
+  function newCommand(args: string[], options?: SpawnOptions) {
     const CMD = WINDOWS ? "cmd" : "sh";
     const ARG = WINDOWS ? "/C" : "-c";
     const ENC = WINDOWS ? "shift-jis" : "utf-8";
 
     // windowsだと、resolveResourceの結果に\\?\がついてることがあるので、それを除去
     if (WINDOWS) {
-      command = command.replace("\\\\?\\", "");
+      args = args.map((arg) => arg.replace("\\\\?\\", ""));
     }
 
-    debug(`> ${command}`);
-    return new Command(CMD, [ARG, command], { encoding: ENC, ...options });
+    debug(`> ${args.join(" ")}`);
+    return new Command(CMD, [ARG, args.join(" ")], {
+      encoding: ENC,
+      ...options,
+    });
   }
 
-  async function openFile() {
-    const command = newCommand(`${START} "${savedFile}"`).on(
-      "close",
-      (data) => {
-        if (data.code !== 0) {
-          addMessage(`処理はコード${data.code}で失敗しました`, COLOR_ERR);
-        }
-      }
-    );
-    command.stdout.on("data", (line) => addMessage(line));
-    command.stderr.on("data", (line) => addMessage(line, COLOR_ERR));
+  async function handleOpenFile() {
+    // const command = newCommand([START, `"${savedFile}"`]).on(
+    //   "close",
+    //   (data) => {
+    //     if (data.code !== 0) {
+    //       addMessage(`処理はコード${data.code}で失敗しました`, COLOR_ERR);
+    //     }
+    //   }
+    // );
+    // command.stdout.on("data", (line) => addMessage(line));
+    // command.stderr.on("data", (line) => addMessage(line, COLOR_ERR));
 
-    command.spawn();
+    // command.spawn();
+    let scriptPath = await resolveResource(`openpdf.${SCRIPT_EXT}`);
+    const output = await newCommand([scriptPath, `"${savedFile}"`]).execute();
+    debug(output);
   }
 
   function debug(output: string | ChildProcess) {
@@ -171,7 +178,7 @@ export const App = () => {
         addMessage(`command has finished with code ${output.code}`, COLOR_DBG);
         addMessage(output.stdout, COLOR_DBG);
         if (output.code !== 0) {
-          addMessage(`setup failed with code ${output.code}`, COLOR_ERR);
+          addMessage(`command failed with code ${output.code}`, COLOR_ERR);
           addMessage(output.stderr, COLOR_ERR);
         }
       }
@@ -207,13 +214,13 @@ export const App = () => {
         let pythonVer = 0.0;
         for (let py of ["python", "python3"]) {
           // Pythonのパスを取得する
-          const output = await newCommand(`${WHERE} ${py}`).execute();
+          const output = await newCommand([WHERE, py]).execute();
           debug(output);
           if (output.code === 0) {
             for (let path of output.stdout.split("\n")) {
               // Pythonのバージョンを取得する
               path = path.replace("\r", "").replace("\n", "");
-              const output = await newCommand(`${path} -V`).execute();
+              const output = await newCommand([path, "-V"]).execute();
               debug(output);
               if (output.code === 0) {
                 const matches = output.stdout.match(/(\d+(\.\d+)?)/);
@@ -231,7 +238,7 @@ export const App = () => {
         }
         // Windowsならpy.exeも試してみる
         if (!pythonPath) {
-          const output = await newCommand(`py -3 -V`).execute();
+          const output = await newCommand(["py", "-3", "-V"]).execute();
           debug(output);
           if (output.code === 0) {
             pythonPath = "py -3";
@@ -245,7 +252,7 @@ export const App = () => {
 
         debug(`${pythonPath}を使用します`);
         // .venvを作成
-        const output = await newCommand(`${pythonPath} -m venv .venv`, {
+        const output = await newCommand([pythonPath, "-m", "venv", ".venv"], {
           cwd: dataDir,
         }).execute();
         debug(output);
@@ -256,7 +263,7 @@ export const App = () => {
 
       // パッケージのインストールなどはスクリプトで
       let scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
-      const command = newCommand(`${scriptPath}`, {
+      const command = newCommand([scriptPath], {
         cwd: dataDir,
       }).on("close", (data) => {
         if (data.code === 0) {
@@ -378,7 +385,7 @@ export const App = () => {
           </div>
           {savedFile.length > 0 && (
             <div className="flex justify-center mt-2">
-              <a href="#" onClick={openFile}>
+              <a href="#" onClick={handleOpenFile}>
                 ファイルを開く
               </a>
             </div>
