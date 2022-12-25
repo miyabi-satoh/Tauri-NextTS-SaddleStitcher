@@ -14,7 +14,11 @@
 - 設定の読み書きを実装しよう。AppConfig でいいかな。
 - (0.0.4)Windows でうまく動かなかったので、書き込み系を AppDir 等にしてみた。
 - (0.0.4)設定ファイルの read を実装した。write は未実装。正直 Windows でのデバッグ用。
+- (0.0.7)Google Cloud に Windows Server の VM を立てて色々検証。
+  - resolveResouce()で先頭に付与される\\?\はプログラム中での置換で除去。
+  - パスを単純に"で囲っても\"にエスケープされてしまうようなので、スペースの前に^を置くことで対処。
+- (0.0.7)UI 刷新
 
 ## Screenshots
 
-![Main](https://github.com/miyabi-satoh/Tauri-NextTS-SaddleStitcher/blob/3f732f8cf584dadbc056cf88b97b05c8a9de5aef/screenshot.png?raw=true)
+![Main](https://github.com/miyabi-satoh/Tauri-NextTS-SaddleStitcher/raw/images/v0.0.7.png)
