@@ -139,6 +139,11 @@ export const App = () => {
     const ARG = WINDOWS ? "/C" : "-c";
     const ENC = WINDOWS ? "shift-jis" : "utf-8";
 
+    // windowsだと、resolveResourceの結果に\\?\がついてることがあるので、それを除去
+    if (WINDOWS) {
+      command = command.replace("\\\\?\\", "");
+    }
+
     debug(`> ${command}`);
     return new Command(CMD, [ARG, command], { encoding: ENC, ...options });
   }
@@ -251,10 +256,6 @@ export const App = () => {
 
       // パッケージのインストールなどはスクリプトで
       let scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
-      // windowsだと、謎に\\?\が付く
-      if (WINDOWS) {
-        scriptPath = scriptPath.replace("\\\\?\\", "");
-      }
       const command = newCommand(`${scriptPath}`, {
         cwd: dataDir,
       }).on("close", (data) => {
