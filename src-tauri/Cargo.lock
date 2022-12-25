@@ -2135,7 +2135,7 @@ checksum = "4501abdff3ae82a1c1b477a17252eb69cee9e66eb915c1abaa4f44d873df9f09"
 
 [[package]]
 name = "saddle_stitcher"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "serde",
  "serde_json",
