@@ -59,7 +59,7 @@
   }
 
   .overlay {
-    @apply absolute text-gray-900 bg-white bg-opacity-60 z-10 h-4/6 w-full flex items-center justify-center;
+    @apply absolute text-gray-900 bg-gray-500 bg-opacity-60 z-10 h-2/3 w-full flex items-center justify-center;
   }
 
   .spinner {
