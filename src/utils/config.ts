@@ -19,7 +19,7 @@ export interface Config {
 
 export async function getConfigDefault(): Promise<Config> {
   return {
-    debug: true,
+    debug: false,
   };
 }
 
