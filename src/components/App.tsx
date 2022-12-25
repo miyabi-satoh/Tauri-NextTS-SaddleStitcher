@@ -380,7 +380,7 @@ export const App = () => {
             </button>
           </div>
         </div>
-        <div className="pt-2 flex flex-col">
+        <div className="py-2 flex flex-col">
           <fieldset>
             <legend>オプション</legend>
             <div className="flex items-center">
