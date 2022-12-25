@@ -80,7 +80,7 @@ export const App = () => {
     const dataDir = await appDataDir();
     const scriptPath = await resolveResource(`saddlestitch.${SCRIPT_EXT}`);
     const command = newCommand(
-      [scriptPath, `"${inputPdf}"`, `"${savePath}"`, openDirection],
+      [`"${scriptPath}"`, `"${inputPdf}"`, `"${savePath}"`, openDirection],
       {
         cwd: dataDir,
       }
@@ -165,8 +165,11 @@ export const App = () => {
     // command.stderr.on("data", (line) => addMessage(line, COLOR_ERR));
 
     // command.spawn();
-    let scriptPath = await resolveResource(`openpdf.${SCRIPT_EXT}`);
-    const output = await newCommand([scriptPath, `"${savedFile}"`]).execute();
+    const scriptPath = await resolveResource(`openpdf.${SCRIPT_EXT}`);
+    const output = await newCommand([
+      `"${scriptPath}"`,
+      `"${savedFile}"`,
+    ]).execute();
     debug(output);
   }
 
@@ -220,7 +223,7 @@ export const App = () => {
             for (let path of output.stdout.split("\n")) {
               // Pythonのバージョンを取得する
               path = path.replace("\r", "").replace("\n", "");
-              const output = await newCommand([path, "-V"]).execute();
+              const output = await newCommand([`"${path}"`, "-V"]).execute();
               debug(output);
               if (output.code === 0) {
                 const matches = output.stdout.match(/(\d+(\.\d+)?)/);
@@ -250,11 +253,14 @@ export const App = () => {
           return reject(false);
         }
 
-        debug(`${pythonPath}を使用します`);
+        debug(`"${pythonPath}"を使用します`);
         // .venvを作成
-        const output = await newCommand([pythonPath, "-m", "venv", ".venv"], {
-          cwd: dataDir,
-        }).execute();
+        const output = await newCommand(
+          [`"${pythonPath}"`, "-m", "venv", ".venv"],
+          {
+            cwd: dataDir,
+          }
+        ).execute();
         debug(output);
         if (output.code !== 0) {
           return reject(false);
@@ -263,7 +269,7 @@ export const App = () => {
 
       // パッケージのインストールなどはスクリプトで
       let scriptPath = await resolveResource(`setup.${SCRIPT_EXT}`);
-      const command = newCommand([scriptPath], {
+      const command = newCommand([`"${scriptPath}"`], {
         cwd: dataDir,
       }).on("close", (data) => {
         if (data.code === 0) {
