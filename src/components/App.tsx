@@ -140,15 +140,17 @@ export const App = () => {
     const ARG = WINDOWS ? "/C" : "-c";
     const ENC = WINDOWS ? "shift-jis" : "utf-8";
 
-    // windowsだと、resolveResourceの結果に\\?\がついてることがあるので、それを除去
     if (WINDOWS) {
-      args = args.map((arg) => arg.replace("\\\\?\\", ""));
+      // windowsだと、resolveResourceの結果に\\?\がついてることがあるので、それを除去
+      // ダブルクォートもうまく行かないので^でエスケープ
+      args = args.map((arg) => arg.replace("\\\\?\\", "").replace(" ", "^ "));
     } else {
       args = args.map((arg) => (arg.includes(" ") ? `"${arg}"` : arg));
     }
 
-    debug(`> ${args.join(" ")}`);
-    return new Command(CMD, [ARG, args.join(" ")], {
+    const strArg = args.join(" ");
+    debug(`> ${strArg}`);
+    return new Command(CMD, [ARG, strArg], {
       encoding: ENC,
       ...options,
     });
