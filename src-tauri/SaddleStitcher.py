@@ -81,9 +81,12 @@ if __name__ == '__main__':
 
     # 引数を解析
     args = parser.parse_args()
+    inp = args.inp.strip("\"")
+    out = args.out.strip("\"")
 
-    # 受け取った引数を出力
-    # print('inp =', args.inp)
-    # print('out =', args.out)
+    # # 受け取った引数を出力
+    # print('inp =', inp)
+    # print('out =', out)
+    # print('dir =', args.dir)
 
-    rearrange_pdf(args.inp, args.out, args.dir)
+    rearrange_pdf(inp, out, args.dir)
